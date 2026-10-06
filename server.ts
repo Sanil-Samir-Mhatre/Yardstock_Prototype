@@ -475,6 +475,11 @@ async function startServer() {
     next();
   });
 
+  // 0. Health check endpoint for Cloud Run & Render
+  app.get('/api/health', (_req, res) => {
+    res.json({ status: 'ok', service: 'YardStock PWA', timestamp: new Date().toISOString() });
+  });
+
   // 1. GET full state + real-time evaluation metrics
   app.get('/api/state', (_req, res) => {
     res.json({
@@ -1081,7 +1086,11 @@ Return structured JSON with material name, materialId, quantity, unit, condition
   if (process.env.NODE_ENV !== 'production') {
     const { createServer: createViteServer } = await import('vite');
     const vite = await createViteServer({
-      server: { middlewareMode: true },
+      server: {
+        middlewareMode: true,
+        hmr: false,
+        watch: process.env.DISABLE_HMR === 'true' ? null : {},
+      },
       appType: 'spa',
     });
     app.use(vite.middlewares);
