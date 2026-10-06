@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: yardstock-pwa
+    runtime: node
+    plan: free
+    buildCommand: npm install --include=dev --legacy-peer-deps && npm run build
+    startCommand: npx tsx server.ts
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: 22.14.0
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: ESCROW_COMMISSION_RATE
+        value: "0.065"
