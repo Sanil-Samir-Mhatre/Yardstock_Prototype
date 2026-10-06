@@ -1,8 +1,10 @@
-const rebarImg = '/images/surplus_rebar_bundles.jpg';
-const cementImg = '/images/surplus_cement_bags.jpg';
-const tilesImg = '/images/surplus_ceramic_tiles.jpg';
-const aacImg = '/images/surplus_aac_blocks.jpg';
-const scaffoldingImg = '/images/surplus_scaffolding_pipes.jpg';
+import {
+  rebarImg,
+  cementImg,
+  tilesImg,
+  aacImg,
+  scaffoldingImg,
+} from './embeddedImages.ts';
 
 export type LanguageCode = 'en' | 'hi' | 'mr';
 export type UserRole = 'buyer' | 'seller' | 'admin';

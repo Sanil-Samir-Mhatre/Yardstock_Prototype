@@ -19,35 +19,41 @@ import {
   rankSmartMatches,
   simpleSha256Hex,
 } from './src/data/yardstockEngine.ts';
+import { EMBEDDED_IMAGE_DATA_URIS } from './src/data/embeddedImages.ts';
 
 dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Ensure valid PNG icons and generated material images exist in /public
+// Ensure valid PNG icons and generated material images exist in /public and /dist
 function ensurePwaPngIcons() {
-  const publicDir = path.join(__dirname, 'public');
-  const imagesDir = path.join(publicDir, 'images');
-  if (!fs.existsSync(imagesDir)) {
-    fs.mkdirSync(imagesDir, { recursive: true });
-  }
-
-  const assetMappings = [
-    ['surplus_rebar_bundles_1791245196800.jpg', 'surplus_rebar_bundles.jpg'],
-    ['surplus_cement_bags_1791245208255.jpg', 'surplus_cement_bags.jpg'],
-    ['surplus_ceramic_tiles_1791245219023.jpg', 'surplus_ceramic_tiles.jpg'],
-    ['surplus_aac_blocks_1791245229814.jpg', 'surplus_aac_blocks.jpg'],
-    ['surplus_scaffolding_pipes_1791245240767.jpg', 'surplus_scaffolding_pipes.jpg'],
-  ];
-
-  for (const [srcName, destName] of assetMappings) {
-    const srcPath = path.join(__dirname, 'src', 'assets', 'images', srcName);
-    const destPath = path.join(imagesDir, destName);
-    if (fs.existsSync(srcPath) && !fs.existsSync(destPath)) {
-      fs.copyFileSync(srcPath, destPath);
+  try {
+    const publicDir = path.join(__dirname, 'public');
+    const imagesDir = path.join(publicDir, 'images');
+    if (!fs.existsSync(imagesDir)) {
+      fs.mkdirSync(imagesDir, { recursive: true });
     }
-  }
+
+    const distImagesDir = path.join(__dirname, 'dist', 'images');
+    if (fs.existsSync(path.join(__dirname, 'dist')) && !fs.existsSync(distImagesDir)) {
+      fs.mkdirSync(distImagesDir, { recursive: true });
+    }
+
+    for (const [fileName, dataUri] of Object.entries(EMBEDDED_IMAGE_DATA_URIS)) {
+      const base64Data = dataUri.replace(/^data:image\/\w+;base64,/, '');
+      const imgBuffer = Buffer.from(base64Data, 'base64');
+      const pubDest = path.join(imagesDir, fileName);
+      if (!fs.existsSync(pubDest)) {
+        fs.writeFileSync(pubDest, imgBuffer);
+      }
+      if (fs.existsSync(distImagesDir)) {
+        const distDest = path.join(distImagesDir, fileName);
+        if (!fs.existsSync(distDest)) {
+          fs.writeFileSync(distDest, imgBuffer);
+        }
+      }
+    }
 
   const createSolidPng = (width: number, height: number, isMaskable: boolean): Buffer => {
     const signature = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
@@ -133,11 +139,14 @@ function ensurePwaPngIcons() {
     { name: 'apple-touch-icon.png', size: 180, maskable: false },
   ];
 
-  for (const ic of icons) {
-    const filePath = path.join(publicDir, ic.name);
-    if (!fs.existsSync(filePath)) {
-      fs.writeFileSync(filePath, createSolidPng(ic.size, ic.size, ic.maskable));
+    for (const ic of icons) {
+      const filePath = path.join(publicDir, ic.name);
+      if (!fs.existsSync(filePath)) {
+        fs.writeFileSync(filePath, createSolidPng(ic.size, ic.size, ic.maskable));
+      }
     }
+  } catch (err) {
+    console.warn('Notice: Could not write static icon cache:', err);
   }
 }
 
@@ -1096,7 +1105,9 @@ Return structured JSON with material name, materialId, quantity, unit, condition
     app.use(vite.middlewares);
   } else {
     const distPath = path.join(__dirname, 'dist');
+    const publicPath = path.join(__dirname, 'public');
     app.use(express.static(distPath));
+    app.use(express.static(publicPath));
     app.get('*', (_req, res) => {
       res.sendFile(path.join(distPath, 'index.html'));
     });
