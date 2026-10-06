@@ -1,0 +1,61 @@
+version: '3.9'
+
+services:
+  postgres-postgis:
+    image: postgis/postgis:16-3.4
+    container_name: yardstock-postgis
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: yardstock
+      POSTGRES_PASSWORD: yardstock_pass
+      POSTGRES_DB: yardstock_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U yardstock -d yardstock_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: yardstock-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: ["redis-server", "--appendonly", "yes"]
+
+  fastapi-engine:
+    build:
+      context: ./backend
+    container_name: yardstock-fastapi
+    restart: unless-stopped
+    env_file:
+      - .env.example
+    environment:
+      DATABASE_URL: postgresql://yardstock:yardstock_pass@postgres-postgis:5432/yardstock_db
+      REDIS_URL: redis://redis:6379/0
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres-postgis:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+  web-pwa:
+    build:
+      context: .
+    container_name: yardstock-pwa
+    restart: unless-stopped
+    env_file:
+      - .env.example
+    ports:
+      - "3000:3000"
+    depends_on:
+      - fastapi-engine
+
+volumes:
+  pgdata:

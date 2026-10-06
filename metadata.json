@@ -1,0 +1,6 @@
+{
+  "name": "YardStock",
+  "description": "Hyper-local construction surplus marketplace PWA with AI Snap-to-List vision, PostGIS micro-radius matching, explainable SHAP trust scoring, and anti-leakage OTP escrow.",
+  "requestFramePermissions": ["camera", "microphone", "geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
