@@ -5,15 +5,14 @@ import zlib from 'zlib';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 import { GoogleGenAI, Type } from '@google/genai';
-import { createServer as createViteServer } from 'vite';
 import {
   MATERIAL_BENCHMARKS,
   MUMBAI_NAVI_MUMBAI_HUBS,
-  MaterialCondition,
-  SurplusListing,
-  ProjectNeed,
-  EscrowOrder,
-  SecurityEventLog,
+  type MaterialCondition,
+  type SurplusListing,
+  type ProjectNeed,
+  type EscrowOrder,
+  type SecurityEventLog,
   generateSyntheticDataset,
   computeBenchmarkPrice,
   inspectPromptInjectionAndPii,
@@ -1080,6 +1079,7 @@ Return structured JSON with material name, materialId, quantity, unit, condition
 
   // Mount Vite middleware in development or static dist in production
   if (process.env.NODE_ENV !== 'production') {
+    const { createServer: createViteServer } = await import('vite');
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: 'spa',
